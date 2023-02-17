@@ -1,27 +1,33 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import {
   Text,
   Flex,
   Group,
   Button,
-  Modal,
   Grid,
   Stack,
   Divider,
   Chip,
   ActionIcon,
   ScrollArea,
+  Card,
 } from "@mantine/core";
-import Flag from "react-world-flags";
-import { IconMapPin, IconX } from "@tabler/icons";
-import { useMediaQuery } from "@mantine/hooks";
+import { IconCheck, IconX } from "@tabler/icons";
 import { useStyles } from "./SearchModal.styles";
+import type {
+  Country,
+  CountryLocation,
+  CountryLocationType,
+} from "../Search/Search";
+import type { LocationSelected } from "../DestinationInput";
 
 interface SearchModalProps {
   opened: boolean;
   setOpened: Function;
-  countries: any;
-  locations: any;
+  countries: Country;
+  locations?: CountryLocation;
+  locationsSelected: LocationSelected;
+  setLocationsSelected: Function;
 }
 
 /**
@@ -33,23 +39,24 @@ export const SearchModal: FC<SearchModalProps> = ({
   setOpened,
   countries,
   locations,
+  locationsSelected,
+  setLocationsSelected,
 }) => {
-  const { classes } = useStyles();
-  const matches = useMediaQuery("(min-width: 900px)");
-  const [locationsSelected, setLocationsSelected] = useState<any>({});
+  const { classes, cx } = useStyles();
+
+  if (!opened) {
+    return <></>;
+  }
 
   return (
-    <Modal
-      opened={opened}
-      onClose={() => setOpened(false)}
-      closeOnEscape
-      withCloseButton={false}
-      padding={0}
-      size={680}
-      overlayOpacity={0}
-      centered
+    <Card
+      shadow="sm"
+      p={0}
+      radius="md"
+      withBorder
+      style={{ width: 680, position: "absolute", marginTop: 4 }}
     >
-      <Grid p={"sm"}>
+      <Grid p={"xs"}>
         <Grid.Col span={7}>
           <Text fw={700}>Results</Text>
           <Stack
@@ -57,25 +64,60 @@ export const SearchModal: FC<SearchModalProps> = ({
             mt="md"
             style={{ overflow: "auto", height: 300 }}
           >
-            {!locations && (
-              <Text ml={8} fs={"xs"}>
-                Enter a destination to see results.
-              </Text>
-            )}
+            {!locations ||
+              (Object.keys(locations).length === 0 && (
+                <Text ml={8} fs={"xs"}>
+                  Enter a destination to see results.
+                </Text>
+              ))}
             {locations &&
               Object.keys(locations).map((key: string) => (
                 <>
-                  <Flex align={"center"}>
-                    <Flag code={locations[key][0]?.country} height={14} />
-                    <Text ml={8} fs={"xs"}>
-                      {countries[key]}
-                    </Text>
+                  <Flex
+                    key={key}
+                    role="button"
+                    align={"center"}
+                    justify="space-between"
+                    onClick={() => {
+                      const _locationsSelected = {
+                        ...locationsSelected,
+                      };
+                      if (_locationsSelected[countries[key].name]) {
+                        delete _locationsSelected[countries[key].name];
+                      } else {
+                        _locationsSelected[countries[key].name] = true;
+                      }
+                      setLocationsSelected(_locationsSelected);
+                    }}
+                    className={cx(classes.item, {
+                      [classes.itemActive]:
+                        locationsSelected[countries[key].name],
+                    })}
+                  >
+                    <Flex align={"center"}>
+                      {countries[key].icon}
+                      <Text ml={8} fs={"xs"}>
+                        {countries[key].name}
+                      </Text>
+                    </Flex>
+                    {locationsSelected[countries[key].name] && (
+                      <IconCheck
+                        size={22}
+                        stroke={1.5}
+                        color="#2563EB"
+                        style={{ marginRight: 8 }}
+                      />
+                    )}
                   </Flex>
 
-                  {locations[key].map((location: any) => (
+                  {locations[key].map((location: CountryLocationType) => (
                     <>
                       <Flex
+                        key={location.name}
+                        role="button"
                         align={"center"}
+                        justify="space-between"
+                        m={0}
                         onClick={() => {
                           const _locationsSelected = {
                             ...locationsSelected,
@@ -90,11 +132,30 @@ export const SearchModal: FC<SearchModalProps> = ({
                           }
                           setLocationsSelected(_locationsSelected);
                         }}
+                        className={cx(classes.item, {
+                          [classes.itemActive]:
+                            locationsSelected[location.name],
+                        })}
                       >
-                        <IconMapPin size={20} stroke={1.5} />
-                        <Text ml={8} fs={"xs"}>
-                          {location.name}
-                        </Text>
+                        <Flex align={"center"}>
+                          {location.icon}
+                          <Flex direction={"column"}>
+                            <Text ml={8} fs={"xs"}>
+                              {location.city}
+                            </Text>
+                            <Text ml={8} fs={"xs"}>
+                              {location.state}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                        {locationsSelected[location.name] && (
+                          <IconCheck
+                            size={22}
+                            stroke={1.5}
+                            color="#2563EB"
+                            style={{ marginRight: 8 }}
+                          />
+                        )}
                       </Flex>
                     </>
                   ))}
@@ -108,40 +169,62 @@ export const SearchModal: FC<SearchModalProps> = ({
           })`}</Text>
           <ScrollArea style={{ height: 300 }}>
             <Group>
-              {Object.keys(locationsSelected).map((location) => (
-                <Chip
-                  color="#E5E7EB"
-                  variant="filled"
-                  radius="sm"
-                  checked={false}
-                >
-                  <Flex align={"center"} justify="center">
-                    {location}
-                    <ActionIcon
-                      onClick={() => {
-                        const _locationsSelected = {
-                          ...locationsSelected,
-                        };
-                        delete _locationsSelected[location];
-                        setLocationsSelected(_locationsSelected);
-                      }}
-                    >
-                      <IconX size={16} stroke={2} />
-                    </ActionIcon>
-                  </Flex>
-                </Chip>
-              ))}
+              {!locationsSelected ||
+                (Object.keys(locationsSelected).length === 0 && (
+                  <Text ml={8} fs={"xs"}>
+                    No locations selected.
+                  </Text>
+                ))}
+
+              {locationsSelected &&
+                Object.keys(locationsSelected).map((location) => (
+                  <Chip
+                    key={location}
+                    color="#E5E7EB"
+                    variant="filled"
+                    radius="sm"
+                    checked={false}
+                  >
+                    <Flex align={"center"} justify="center">
+                      {location}
+                      <ActionIcon
+                        onClick={() => {
+                          const _locationsSelected = {
+                            ...locationsSelected,
+                          };
+                          delete _locationsSelected[location];
+                          setLocationsSelected(_locationsSelected);
+                        }}
+                      >
+                        <IconX size={16} stroke={2} />
+                      </ActionIcon>
+                    </Flex>
+                  </Chip>
+                ))}
             </Group>
           </ScrollArea>
         </Grid.Col>
       </Grid>
       <Divider />
       <Group position="right" m="lg">
-        <Button variant="subtle" onClick={() => setOpened(false)}>
+        <Button
+          variant="subtle"
+          onClick={() => {
+            setOpened(false);
+            setLocationsSelected({});
+          }}
+        >
           Cancel
         </Button>
-        <Button variant="outline">Confirm</Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setOpened(false);
+          }}
+        >
+          Confirm
+        </Button>
       </Group>
-    </Modal>
+    </Card>
   );
 };

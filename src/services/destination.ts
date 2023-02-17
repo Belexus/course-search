@@ -2,7 +2,7 @@ import axios from "axios";
 
 export interface Location {
   id: string;
-  name?: string;
+  name: string;
   country: string;
 }
 export interface Campus {
@@ -22,7 +22,7 @@ export interface FetchDestinationsResponse {
 
 const DestinationAPI = {
   fetchAll: async (): Promise<FetchDestinationsResponse> => {
-    const response: any = await axios.get(
+    const response = await axios.get(
       `${process.env.REACT_APP_API_URL}/raw/1q1HDFng`
     );
     return response?.data;

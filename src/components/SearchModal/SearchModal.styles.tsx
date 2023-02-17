@@ -1,21 +1,18 @@
 import { createStyles } from "@mantine/core";
 
 export const useStyles = createStyles((theme) => ({
-  root: {
-    position: "relative",
+  item: {
+    ...theme.fn.focusStyles(),
+    padding: "8px 0",
+    "&:hover": {
+      backgroundColor: "#F0F6FF",
+    },
+    cursor: "pointer",
   },
 
-  input: {
-    height: "auto",
-    paddingTop: 18,
-  },
-
-  label: {
-    position: "absolute",
-    pointerEvents: "none",
-    fontSize: theme.fontSizes.xs,
-    paddingLeft: theme.spacing.sm,
-    paddingTop: theme.spacing.sm / 2,
-    zIndex: 1,
+  itemActive: {
+    "&, &:hover": {
+      backgroundColor: "#F0F6FF",
+    },
   },
 }));

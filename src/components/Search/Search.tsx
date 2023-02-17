@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, ReactElement, useEffect, useState } from "react";
 import {
   Text,
   Flex,
@@ -16,11 +16,31 @@ import {
   IconAward,
   IconUser,
   IconSearch,
+  IconMapPin,
 } from "@tabler/icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { useStyles } from "./Search.styles";
 import { useFetchDestination } from "../../hooks/useFechDestinations";
-import { SearchModal } from "../SearchModal";
+import { DestinationInput } from "../DestinationInput";
+
+export interface Country {
+  [key: string]: CountryType;
+}
+
+interface CountryType {
+  name: string;
+  icon?: ReactElement<any, any> | null;
+}
+
+export interface CountryLocation {
+  [key: string]: Array<CountryLocationType>;
+}
+export interface CountryLocationType {
+  name: string;
+  city?: string;
+  state?: string;
+  icon?: ReactElement<any, any> | null;
+}
 
 /**
  * Search component
@@ -29,9 +49,8 @@ import { SearchModal } from "../SearchModal";
 export const Search: FC = () => {
   const { classes } = useStyles();
   const matches = useMediaQuery("(min-width: 900px)");
-  const [opened, setOpened] = useState(false);
-  const [countries, setCountries] = useState<any>();
-  const [locations, setLocations] = useState<any>();
+  const [countries, setCountries] = useState<Country>({});
+  const [countryLocation, setCountryLocation] = useState<CountryLocation>({});
 
   const {
     data: destinationsData,
@@ -49,28 +68,47 @@ export const Search: FC = () => {
       const _locations =
         destinationsData.data.getAvailableFiltersForLanguageSearch?.locations;
 
-      const _countries: any = {};
-      const countryLocation: any = {};
+      const _countries: Country = {};
+      const _countryLocation: CountryLocation = {};
       _locations.forEach((element) => {
         if (element.name?.split(",")?.length === 1) {
-          _countries[element.country] = element.name.trim();
-          countryLocation[element.country] = [];
+          _countries[element.country] = {
+            name: element.name.trim(),
+            icon: <Flag code={element.country} height={14} />,
+          };
+          _countryLocation[element.country] = [];
         }
       });
       _locations.forEach((element) => {
         const nameSplit = element.name?.split(",") || [];
         if (
           nameSplit?.length > 1 &&
-          countryLocation[element.country]?.length >= 0
+          _countryLocation[element.country]?.length >= 0
         ) {
-          countryLocation[element.country].push(element);
+          _countryLocation[element.country].push({
+            name: element?.name,
+            state: element?.name
+              ? element?.name.replace(`${nameSplit[0]}, `, "")
+              : "",
+            city: nameSplit[0],
+            icon: <IconMapPin size={22} stroke={1.5} />,
+          });
         }
       });
       setCountries(_countries);
-      setLocations(countryLocation);
+      setCountryLocation(_countryLocation);
     }
   }, [destinationsData]);
 
+  const UserCountry = () => {
+    return (
+      <>
+        <IconUser size={20} style={{ marginRight: 8 }} />
+        <Flag code="MX" height={14} />
+        <Text ml={8}>Mexico, Onshore</Text>
+      </>
+    );
+  };
   return (
     <>
       <LoadingOverlay visible={isLoadingDestinations} overlayBlur={2} />
@@ -94,9 +132,7 @@ export const Search: FC = () => {
         <Paper shadow="md" p="md" pos="relative">
           {!matches && (
             <Flex mb="xs" justify="flex-end" align="center">
-              <IconUser size={20} style={{ marginRight: 8 }} />
-              <Flag code="MX" height={14} />
-              <Text ml={8}>Mexico, Onshore</Text>
+              <UserCountry />
             </Flex>
           )}
           <Tabs defaultValue="language">
@@ -120,35 +156,31 @@ export const Search: FC = () => {
               </Tabs.Tab>
               {matches && (
                 <Flex ml="auto" justify="center" align="center">
-                  <IconUser size={20} style={{ marginRight: 8 }} />
-                  <Flag code="MX" height={14} />
-                  <Text ml={8}>Mexico, Onshore</Text>
+                  <UserCountry />
                 </Flex>
               )}
             </Tabs.List>
 
             <Tabs.Panel value="language" pt="xs">
               <Group position="apart" grow={matches}>
-                <TextInput
-                  label="Destination"
-                  placeholder="Select destination"
-                  rightSection={<IconSearch size={20} stroke={1.5} />}
-                  classNames={classes}
-                  onBlur={() => {
-                    setOpened(true);
-                  }}
+                <DestinationInput
+                  countries={countries}
+                  countryLocation={countryLocation}
                 />
+
                 <TextInput
                   label="Provider"
-                  placeholder="Select provider"
+                  placeholder="Search"
                   rightSection={<IconSearch size={20} stroke={1.5} />}
                   classNames={classes}
+                  autoComplete="off"
                 />
                 <TextInput
                   label="Min. number of weeks"
                   defaultValue={4}
                   classNames={classes}
                   type="number"
+                  autoComplete="off"
                 />
                 <Button
                   leftIcon={<IconSearch size={18} />}
@@ -159,18 +191,11 @@ export const Search: FC = () => {
                 </Button>
               </Group>
             </Tabs.Panel>
-
             <Tabs.Panel value="higherEd" pt="xs">
               <></>
             </Tabs.Panel>
           </Tabs>
         </Paper>
-        <SearchModal
-          opened={opened}
-          setOpened={setOpened}
-          countries={countries}
-          locations={locations}
-        />
       </Container>
     </>
   );
