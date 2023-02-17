@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { Layout } from "../../components/Layout";
+import { Search } from "../../components/Search";
 
 /**
  * Course page
@@ -9,7 +10,7 @@ import { Layout } from "../../components/Layout";
 export const Course: FC = () => {
   return (
     <Layout>
-      <div></div>
+      <Search />
     </Layout>
   );
 };

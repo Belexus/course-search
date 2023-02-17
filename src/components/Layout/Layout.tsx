@@ -31,6 +31,7 @@ export const Layout: FC<LayoutProps> = ({ children }) => {
     <AppShell
       navbarOffsetBreakpoint="sm"
       asideOffsetBreakpoint="sm"
+      padding={0}
       navbar={
         <Group align="stretch" spacing={0} noWrap>
           <Navbar
@@ -79,7 +80,7 @@ export const Layout: FC<LayoutProps> = ({ children }) => {
       }
       header={<Header opened={opened} setOpened={setOpened} />}
     >
-      <Container fluid>{children}</Container>
+      {children}
     </AppShell>
   );
 };
