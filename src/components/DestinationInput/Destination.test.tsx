@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { DestinationInput } from "./DestinationInput";
 
 const setup = () => {
-  render(<DestinationInput countries={{}} countryLocation={{}} />);
+  render(<DestinationInput countries={{}} countryLocation={[]} />);
 };
 
 const setupWithData = () => {
@@ -10,26 +10,30 @@ const setupWithData = () => {
     <DestinationInput
       countries={{
         CA: {
+          id: "ChIJs0-pQ_FzhlQRi_OBm-qWkbs",
           name: "Canada",
           icon: null,
+          country: "CA",
         },
       }}
-      countryLocation={{
-        CA: [
-          {
-            name: "Toronto, ON, Canada",
-            city: "Toronto",
-            state: "ON, Canada",
-            icon: null,
-          },
-          {
-            name: "Vancouver, BC, Canada",
-            city: "Vancouver",
-            state: "BC, Canada",
-            icon: null,
-          },
-        ],
-      }}
+      countryLocation={[
+        {
+          id: "ChIJDbdkHFQayUwR7-8fITgxTmU",
+          name: "Toronto, ON, Canada",
+          city: "Toronto",
+          state: "ON, Canada",
+          icon: null,
+          country: "CA",
+        },
+        {
+          id: "ChIJOwg_06VPwokRYv534QaPC8g",
+          name: "Vancouver, BC, Canada",
+          city: "Vancouver",
+          state: "BC, Canada",
+          icon: null,
+          country: "CA",
+        },
+      ]}
     />
   );
 };

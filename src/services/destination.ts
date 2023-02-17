@@ -8,7 +8,7 @@ export interface Location {
 export interface Campus {
   id: string;
   name: string;
-  location: Array<Location>;
+  location: Location;
 }
 
 export interface FetchDestinationsResponse {

@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Text,
   Flex,
@@ -11,25 +11,26 @@ import {
   ActionIcon,
   ScrollArea,
   Card,
+  Loader,
 } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons";
 import { useStyles } from "./SearchModal.styles";
-import type {
-  Country,
-  CountryLocation,
-  CountryLocationType,
-} from "../Search/Search";
-import type { LocationSelected } from "../DestinationInput";
+import type { Country, CountryLocationType } from "../Search/Search";
 import { useMediaQuery } from "@mantine/hooks";
+import InfiniteScroll from "react-infinite-scroller";
 
 interface SearchModalProps {
   opened: boolean;
   setOpened: Function;
   countries: Country;
-  locations: CountryLocation;
-  locationsSelected: LocationSelected;
+  locations: Array<CountryLocationType>;
+  locationsSelected: Array<CountryLocationType>;
   setLocationsSelected: Function;
+  emptyResultMessage?: string;
+  emptySelectMessage?: string;
 }
+
+const MAX_ITEMS = 50;
 /**
  * Search Modal component
  * @param {
@@ -45,13 +46,55 @@ interface SearchModalProps {
 export const SearchModal: FC<SearchModalProps> = ({
   opened,
   setOpened,
-  countries,
   locations,
   locationsSelected,
   setLocationsSelected,
+  emptyResultMessage,
+  emptySelectMessage,
 }) => {
   const { classes, cx } = useStyles();
   const matches = useMediaQuery("(min-width: 900px)");
+  const [items, setItems] = useState<Array<CountryLocationType>>([]);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+
+  const fetchData = (page: number) => {
+    if (locations?.length > 0) {
+      const newItems = locations.slice(
+        MAX_ITEMS * (page - 1),
+        MAX_ITEMS * (page - 1) + MAX_ITEMS
+      );
+
+      if ((page - 1) * MAX_ITEMS >= locations.length) {
+        setHasMoreItems(false);
+      } else {
+        setHasMoreItems(true);
+      }
+
+      setItems([...items, ...newItems]);
+    }
+  };
+
+  const handleResultItemClick = (location: CountryLocationType) => {
+    let _locationsSelected = [...locationsSelected];
+    if (
+      _locationsSelected.findIndex((element) => element.id === location.id) >= 0
+    ) {
+      _locationsSelected = _locationsSelected.filter(
+        (element) => element.id !== location.id
+      );
+    } else {
+      _locationsSelected.push(location);
+    }
+    setLocationsSelected(_locationsSelected);
+  };
+
+  const handleSelectItemClick = (location: CountryLocationType) => {
+    let _locationsSelected = [...locationsSelected];
+    _locationsSelected = _locationsSelected.filter(
+      (element) => element.id !== location.id
+    );
+    setLocationsSelected(_locationsSelected);
+  };
 
   if (!opened) {
     return <></>;
@@ -80,88 +123,56 @@ export const SearchModal: FC<SearchModalProps> = ({
             mt="md"
             style={{ overflow: "auto", height: 300 }}
           >
-            {!locations ||
-              (Object.keys(locations).length === 0 && (
-                <Text ml={8} fs={"xs"}>
-                  Enter a destination to see results.
-                </Text>
-              ))}
-            {locations &&
-              Object.keys(locations).map((key: string) => (
-                <div key={key}>
-                  <Flex
-                    role="button"
-                    align={"center"}
-                    justify="space-between"
-                    onClick={() => {
-                      const _locationsSelected = {
-                        ...locationsSelected,
-                      };
-                      if (_locationsSelected[countries[key].name]) {
-                        delete _locationsSelected[countries[key].name];
-                      } else {
-                        _locationsSelected[countries[key].name] = true;
-                      }
-                      setLocationsSelected(_locationsSelected);
-                    }}
-                    className={cx(classes.item, {
-                      [classes.itemActive]:
-                        locationsSelected[countries[key].name],
-                    })}
-                  >
-                    <Flex align={"center"}>
-                      {countries[key].icon}
-                      <Text ml={8} fs={"xs"}>
-                        {countries[key].name}
-                      </Text>
-                    </Flex>
-                    {locationsSelected[countries[key].name] && (
-                      <IconCheck
-                        size={22}
-                        stroke={1.5}
-                        color="#2563EB"
-                        style={{ marginRight: 8 }}
-                      />
-                    )}
-                  </Flex>
-
-                  {locations[key].map((location: CountryLocationType) => (
+            <InfiniteScroll
+              pageStart={0}
+              threshold={100}
+              loadMore={fetchData}
+              height={300}
+              width={"100%"}
+              hasMore={hasMoreItems}
+              useWindow={false}
+              loader={
+                <Flex align="center" justify="center">
+                  <Text mr="sm" mt="sm" fw={600} fs="xs">
+                    Loading data...
+                  </Text>
+                  <Loader size="xs" />
+                </Flex>
+              }
+            >
+              {items &&
+                items.map((location: CountryLocationType, index: number) => (
+                  <div key={location.id}>
                     <Flex
-                      key={location.name}
+                      key={index}
                       role="button"
                       align={"center"}
                       justify="space-between"
                       m={0}
-                      onClick={() => {
-                        const _locationsSelected = {
-                          ...locationsSelected,
-                        };
-                        if (
-                          location?.name &&
-                          _locationsSelected[location.name]
-                        ) {
-                          delete _locationsSelected[location.name];
-                        } else {
-                          _locationsSelected[location?.name || ""] = true;
-                        }
-                        setLocationsSelected(_locationsSelected);
-                      }}
+                      onClick={() => handleResultItemClick(location)}
                       className={cx(classes.item, {
-                        [classes.itemActive]: locationsSelected[location.name],
+                        [classes.itemActive]:
+                          locationsSelected.findIndex(
+                            (element) => element.id === location.id
+                          ) >= 0,
                       })}
                     >
                       <Flex align={"center"}>
                         {location.icon}
-                        <Flex direction={"column"}>
-                          <Text ml={8} fs={"xs"}>
-                            {location.city}
+                        <Flex direction={"column"} style={{ width: 200 }}>
+                          <Text ml={8} fs={"xs"} truncate>
+                            {location.city || location.name}
                           </Text>
-                          <Text ml={8} fs={"xs"}>
-                            {location.state}
-                          </Text>
+                          {location.state && (
+                            <Text ml={8} fs={"xs"} truncate>
+                              {location.state}
+                            </Text>
+                          )}
                         </Flex>
                       </Flex>
-                      {locationsSelected[location.name] && (
+                      {locationsSelected.findIndex(
+                        (element) => element.id === location.id
+                      ) >= 0 && (
                         <IconCheck
                           size={22}
                           stroke={1.5}
@@ -170,9 +181,15 @@ export const SearchModal: FC<SearchModalProps> = ({
                         />
                       )}
                     </Flex>
-                  ))}
-                </div>
-              ))}
+                  </div>
+                ))}
+            </InfiniteScroll>
+
+            {!(locations?.length > 0) && (
+              <Text ml={8} fs={"xs"}>
+                {emptyResultMessage}
+              </Text>
+            )}
           </Stack>
         </Grid.Col>
         <Grid.Col span={5} bg="#F9FAFB" m={0}>
@@ -184,29 +201,23 @@ export const SearchModal: FC<SearchModalProps> = ({
               {!locationsSelected ||
                 (Object.keys(locationsSelected).length === 0 && (
                   <Text ml={8} fs={"xs"}>
-                    No locations selected.
+                    {emptySelectMessage}
                   </Text>
                 ))}
 
               {locationsSelected &&
-                Object.keys(locationsSelected).map((location) => (
+                locationsSelected.map((location, index) => (
                   <Chip
-                    key={location}
+                    key={index}
                     color="#E5E7EB"
                     variant="filled"
                     radius="sm"
                     checked={false}
                   >
                     <Flex align={"center"} justify="center">
-                      {location}
+                      {location?.name}
                       <ActionIcon
-                        onClick={() => {
-                          const _locationsSelected = {
-                            ...locationsSelected,
-                          };
-                          delete _locationsSelected[location];
-                          setLocationsSelected(_locationsSelected);
-                        }}
+                        onClick={() => handleSelectItemClick(location)}
                       >
                         <IconX size={16} stroke={2} />
                       </ActionIcon>
@@ -223,7 +234,7 @@ export const SearchModal: FC<SearchModalProps> = ({
           variant="subtle"
           onClick={() => {
             setOpened(false);
-            setLocationsSelected({});
+            setLocationsSelected([]);
           }}
         >
           Cancel

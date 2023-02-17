@@ -2,47 +2,43 @@ import { FC, useEffect, useState, useContext } from "react";
 import { TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useStyles } from "./DestinationInput.styles";
+import { useStyles } from "./ProviderInput.styles";
 import { SearchModal } from "../SearchModal";
-import type { Country, CountryLocationType } from "../Search";
+import type { CountryLocationType } from "../Search";
 import { AppContext } from "../../context/AppContext";
 
-export interface LocationSelected {
+export interface ProviderSelected {
   [key: string]: boolean;
 }
 
-interface DestinationInputProps {
-  countries: Country;
-  countryLocation: Array<CountryLocationType>;
+interface ProviderInputProps {
+  providers: Array<CountryLocationType>;
   disabled?: boolean;
 }
 
 /**
- * Destination Input component
+ * Provider Input component
  * @param {
- *   countries,
- *   countryLocation,
- *   disabled
+ *   providers,
  * }
  * @returns JSX component
  */
-export const DestinationInput: FC<DestinationInputProps> = ({
-  countries,
-  countryLocation,
+export const ProviderInput: FC<ProviderInputProps> = ({
+  providers,
   disabled = false,
 }) => {
   const { classes } = useStyles();
-  const { locationsSelected, setLocationsSelected } = useContext(AppContext);
+  const { providersSelected, setProvidersSelected } = useContext(AppContext);
   const [opened, setOpened] = useState(false);
-  const [destination, setDestination] = useState("");
-  const [prevDestination, setPrevDestination] = useState("");
+  const [destination, setProvider] = useState("");
+  const [prevProvider, setPrevProvider] = useState("");
   const [debounced] = useDebouncedValue(destination, 400);
 
   const [locations, setLocations] = useState<Array<CountryLocationType>>([]);
 
   useEffect(() => {
-    setLocations(countryLocation);
-  }, [countryLocation]);
+    setLocations(providers);
+  }, [providers]);
 
   useEffect(() => {
     if (opened) {
@@ -53,16 +49,16 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   useEffect(() => {
     if (
       !opened &&
-      locationsSelected &&
-      Object.keys(locationsSelected).length > 0
+      providersSelected &&
+      Object.keys(providersSelected).length > 0
     ) {
-      setPrevDestination(destination);
-      setDestination(`${Object.keys(locationsSelected).length} selected`);
+      setPrevProvider(destination);
+      setProvider(`${Object.keys(providersSelected).length} selected`);
     }
-  }, [locationsSelected, opened]);
+  }, [providersSelected, opened]);
 
   const populateResultList = () => {
-    const _countryLocation = [...countryLocation];
+    const _countryLocation = [...providers];
 
     const locationList = _countryLocation.filter((item) => {
       return item?.name.toLowerCase().includes(destination.toLowerCase());
@@ -74,7 +70,7 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   const handleDestionationChange = (event: {
     currentTarget: { value: string };
   }) => {
-    setDestination(event.currentTarget.value);
+    setProvider(event.currentTarget.value);
   };
   const handleDestionationBlur = () => {
     setOpened(true);
@@ -82,13 +78,13 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   return (
     <div>
       <TextInput
-        label="Destination"
+        label="Provider"
         placeholder="Search"
         rightSection={<IconSearch size={20} stroke={1.5} />}
         value={destination}
         onChange={handleDestionationChange}
         onFocus={() => {
-          setDestination(prevDestination);
+          setProvider(prevProvider);
           setOpened(true);
         }}
         onBlur={handleDestionationBlur}
@@ -96,15 +92,16 @@ export const DestinationInput: FC<DestinationInputProps> = ({
         autoComplete="off"
         disabled={disabled}
       />
+
       <SearchModal
         opened={opened}
         setOpened={setOpened}
-        countries={countries}
+        countries={{}}
         locations={locations}
-        locationsSelected={locationsSelected}
-        setLocationsSelected={setLocationsSelected}
-        emptyResultMessage="Enter a destination to see results."
-        emptySelectMessage="No locations selected."
+        locationsSelected={providersSelected}
+        setLocationsSelected={setProvidersSelected}
+        emptyResultMessage="Enter a provider to see results."
+        emptySelectMessage="No providers selected."
       />
     </div>
   );
