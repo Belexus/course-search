@@ -116,7 +116,7 @@ export const Search: FC = () => {
         fluid
         style={{
           position: "relative",
-          padding: 32,
+          padding: matches ? 32 : 8,
         }}
       >
         <div

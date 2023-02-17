@@ -20,6 +20,7 @@ import type {
   CountryLocationType,
 } from "../Search/Search";
 import type { LocationSelected } from "../DestinationInput";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface SearchModalProps {
   opened: boolean;
@@ -50,6 +51,7 @@ export const SearchModal: FC<SearchModalProps> = ({
   setLocationsSelected,
 }) => {
   const { classes, cx } = useStyles();
+  const matches = useMediaQuery("(min-width: 900px)");
 
   if (!opened) {
     return <></>;
@@ -59,9 +61,16 @@ export const SearchModal: FC<SearchModalProps> = ({
     <Card
       shadow="sm"
       p={0}
+      m={0}
       radius="md"
       withBorder
-      style={{ width: 680, position: "absolute", marginTop: 4 }}
+      style={{
+        width: "100%",
+        maxWidth: matches ? 680 : "calc(100vw - 46px)",
+        position: "absolute",
+        marginTop: 4,
+        zIndex: 9,
+      }}
     >
       <Grid p={"xs"}>
         <Grid.Col span={7}>

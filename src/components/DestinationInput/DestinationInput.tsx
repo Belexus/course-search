@@ -36,7 +36,7 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   const [locationsSelected, setLocationsSelected] = useState<LocationSelected>(
     {}
   );
-  const [locations, setLocations] = useState<CountryLocation>();
+  const [locations, setLocations] = useState<CountryLocation>({});
 
   useEffect(() => {
     setLocations(countryLocation);
