@@ -1,9 +1,11 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import App from "./App";
+import { BrowserRouter } from "react-router-dom";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test("renders learn react link", () => {
+  render(<App />, { wrapper: BrowserRouter });
+
+  const element = screen.getByText(/Back to Edvisor for Agents/i);
+  expect(element).toBeInTheDocument();
+  expect(element).toBeInTheDocument();
 });

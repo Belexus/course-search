@@ -38,7 +38,7 @@ export const Header: FC<HeaderProps> = ({ opened, setOpened }) => {
           <IconStar size={36} fill="#60A5FA" stroke={0} />
         </ActionIcon>
         <Title size={14} color="#1F2937" fw={600}>
-          Estudiar - Mexico City
+          Estudiar · Mexico City
         </Title>
       </Flex>
       {matches && (
@@ -48,6 +48,7 @@ export const Header: FC<HeaderProps> = ({ opened, setOpened }) => {
       )}
       <MediaQuery largerThan="sm" styles={{ display: "none" }}>
         <Burger
+          data-testid="star-icon"
           opened={opened}
           onClick={() => setOpened((o: boolean) => !o)}
           size="sm"
