@@ -50,6 +50,12 @@
     ]
   },
   "devDependencies": {
-    "@types/react-world-flags": "^1.4.2"
+    "@types/react-world-flags": "^1.4.2",
+    "resize-observer-polyfill": "^1.5.1"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "axios": "axios/dist/node/axios.cjs"
+    }
   }
 }

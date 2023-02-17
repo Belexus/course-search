@@ -25,14 +25,21 @@ interface SearchModalProps {
   opened: boolean;
   setOpened: Function;
   countries: Country;
-  locations?: CountryLocation;
+  locations: CountryLocation;
   locationsSelected: LocationSelected;
   setLocationsSelected: Function;
 }
-
 /**
  * Search Modal component
- * @returns  JSX component
+ * @param {
+ *   opened,
+ *   setOpened,
+ *   countries,
+ *   locations,
+ *   locationsSelected,
+ *   setLocationsSelected,
+ * }
+ * @returns JSX component
  */
 export const SearchModal: FC<SearchModalProps> = ({
   opened,
@@ -72,9 +79,8 @@ export const SearchModal: FC<SearchModalProps> = ({
               ))}
             {locations &&
               Object.keys(locations).map((key: string) => (
-                <>
+                <div key={key}>
                   <Flex
-                    key={key}
                     role="button"
                     align={"center"}
                     justify="space-between"
@@ -111,55 +117,52 @@ export const SearchModal: FC<SearchModalProps> = ({
                   </Flex>
 
                   {locations[key].map((location: CountryLocationType) => (
-                    <>
-                      <Flex
-                        key={location.name}
-                        role="button"
-                        align={"center"}
-                        justify="space-between"
-                        m={0}
-                        onClick={() => {
-                          const _locationsSelected = {
-                            ...locationsSelected,
-                          };
-                          if (
-                            location?.name &&
-                            _locationsSelected[location.name]
-                          ) {
-                            delete _locationsSelected[location.name];
-                          } else {
-                            _locationsSelected[location?.name || ""] = true;
-                          }
-                          setLocationsSelected(_locationsSelected);
-                        }}
-                        className={cx(classes.item, {
-                          [classes.itemActive]:
-                            locationsSelected[location.name],
-                        })}
-                      >
-                        <Flex align={"center"}>
-                          {location.icon}
-                          <Flex direction={"column"}>
-                            <Text ml={8} fs={"xs"}>
-                              {location.city}
-                            </Text>
-                            <Text ml={8} fs={"xs"}>
-                              {location.state}
-                            </Text>
-                          </Flex>
+                    <Flex
+                      key={location.name}
+                      role="button"
+                      align={"center"}
+                      justify="space-between"
+                      m={0}
+                      onClick={() => {
+                        const _locationsSelected = {
+                          ...locationsSelected,
+                        };
+                        if (
+                          location?.name &&
+                          _locationsSelected[location.name]
+                        ) {
+                          delete _locationsSelected[location.name];
+                        } else {
+                          _locationsSelected[location?.name || ""] = true;
+                        }
+                        setLocationsSelected(_locationsSelected);
+                      }}
+                      className={cx(classes.item, {
+                        [classes.itemActive]: locationsSelected[location.name],
+                      })}
+                    >
+                      <Flex align={"center"}>
+                        {location.icon}
+                        <Flex direction={"column"}>
+                          <Text ml={8} fs={"xs"}>
+                            {location.city}
+                          </Text>
+                          <Text ml={8} fs={"xs"}>
+                            {location.state}
+                          </Text>
                         </Flex>
-                        {locationsSelected[location.name] && (
-                          <IconCheck
-                            size={22}
-                            stroke={1.5}
-                            color="#2563EB"
-                            style={{ marginRight: 8 }}
-                          />
-                        )}
                       </Flex>
-                    </>
+                      {locationsSelected[location.name] && (
+                        <IconCheck
+                          size={22}
+                          stroke={1.5}
+                          color="#2563EB"
+                          style={{ marginRight: 8 }}
+                        />
+                      )}
+                    </Flex>
                   ))}
-                </>
+                </div>
               ))}
           </Stack>
         </Grid.Col>

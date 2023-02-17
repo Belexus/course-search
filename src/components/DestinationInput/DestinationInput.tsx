@@ -17,7 +17,11 @@ interface DestinationInputProps {
 
 /**
  * Destination Input component
- * @returns  JSX component
+ * @param {
+ *   countries,
+ *   countryLocation,
+ * }
+ * @returns JSX component
  */
 export const DestinationInput: FC<DestinationInputProps> = ({
   countries,
