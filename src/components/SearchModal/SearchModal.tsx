@@ -104,6 +104,10 @@ export const SearchModal: FC<SearchModalProps> = ({
     setItemsSelected(_locationsSelected);
   };
 
+  /**
+   * Handle select item click into Selected section
+   * @param location
+   */
   const handleSelectItemClick = (location: CountryLocationType) => {
     let _locationsSelected = [...itemsSelected];
     _locationsSelected = _locationsSelected.filter(
@@ -212,7 +216,7 @@ export const SearchModal: FC<SearchModalProps> = ({
         </Grid.Col>
         <Grid.Col span={5} bg="#F9FAFB" m={0}>
           <Text fw={700} mb="md">{`Selected (${itemsSelected?.length})`}</Text>
-          <ScrollArea style={{ height: 300 }}>
+          <ScrollArea style={{ height: 300, width: "100%" }}>
             <Group>
               {!itemsSelected ||
                 (itemsSelected?.length === 0 && (
@@ -231,7 +235,10 @@ export const SearchModal: FC<SearchModalProps> = ({
                     checked={false}
                   >
                     <Flex align={"center"} justify="center">
-                      {location?.name}
+                      <Text ml={8} fs={"xs"} truncate style={{ maxWidth: 185 }}>
+                        {location?.name}
+                      </Text>
+
                       <ActionIcon
                         onClick={() => handleSelectItemClick(location)}
                       >
