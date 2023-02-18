@@ -51,6 +51,7 @@ export interface CountryLocationType {
   state?: string;
   icon?: ReactElement<any, any> | null;
   country: string;
+  locationId?: string;
 }
 
 /**
@@ -154,6 +155,7 @@ export const Search: FC = () => {
           state,
           icon: <IconStack2 size={22} stroke={1.5} color="#1c7ed6" />,
           country: element.location.country,
+          locationId: element.location.id,
         });
       });
 

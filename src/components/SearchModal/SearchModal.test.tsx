@@ -91,7 +91,7 @@ test("should be able to allow display empty location selected message", () => {
 
 test("should be able to allow display results items", () => {
   setupWithData();
-  const element = screen.getByText(/Toronto/i);
+  const element = screen.getByRole("button", { name: /Toronto/i });
   expect(element).toBeInTheDocument();
 });
 

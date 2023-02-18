@@ -32,8 +32,14 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   disabled = false,
 }) => {
   const { classes } = useStyles();
-  const { locationsSelected, setLocationsSelected } = useContext(AppContext);
-  const [opened, setOpened] = useState(false);
+  const {
+    locationsSelected,
+    setLocationsSelected,
+    destinationModalOpened,
+    setDestinationModalOpened,
+    setProviderModalOpened,
+  } = useContext(AppContext);
+
   const [destination, setDestination] = useState("");
   const [prevDestination, setPrevDestination] = useState("");
   const [debounced] = useDebouncedValue(destination, 400);
@@ -45,29 +51,24 @@ export const DestinationInput: FC<DestinationInputProps> = ({
   }, [countryLocation]);
 
   useEffect(() => {
-    if (opened) {
-      populateResultList();
+    if (destinationModalOpened && debounced !== prevDestination) {
+      populateResultList(debounced);
     }
   }, [debounced]);
 
   useEffect(() => {
-    if (
-      !opened &&
-      locationsSelected &&
-      Object.keys(locationsSelected).length > 0
-    ) {
+    if (!destinationModalOpened && locationsSelected?.length > 0) {
       setPrevDestination(destination);
-      setDestination(`${Object.keys(locationsSelected).length} selected`);
+      setDestination(`${locationsSelected?.length} selected`);
     }
-  }, [locationsSelected, opened]);
+  }, [locationsSelected, destinationModalOpened]);
 
-  const populateResultList = () => {
+  const populateResultList = (destination: string) => {
     const _countryLocation = [...countryLocation];
 
     const locationList = _countryLocation.filter((item) => {
       return item?.name.toLowerCase().includes(destination.toLowerCase());
     });
-
     setLocations(locationList);
   };
 
@@ -77,7 +78,8 @@ export const DestinationInput: FC<DestinationInputProps> = ({
     setDestination(event.currentTarget.value);
   };
   const handleDestionationBlur = () => {
-    setOpened(true);
+    setDestinationModalOpened(true);
+    setProviderModalOpened(false);
   };
   return (
     <div>
@@ -89,7 +91,8 @@ export const DestinationInput: FC<DestinationInputProps> = ({
         onChange={handleDestionationChange}
         onFocus={() => {
           setDestination(prevDestination);
-          setOpened(true);
+          setDestinationModalOpened(true);
+          setProviderModalOpened(false);
         }}
         onBlur={handleDestionationBlur}
         classNames={classes}
@@ -97,8 +100,8 @@ export const DestinationInput: FC<DestinationInputProps> = ({
         disabled={disabled}
       />
       <SearchModal
-        opened={opened}
-        setOpened={setOpened}
+        opened={destinationModalOpened}
+        setOpened={setDestinationModalOpened}
         countries={countries}
         locations={locations}
         locationsSelected={locationsSelected}
