@@ -9,6 +9,8 @@ import {
   Button,
   TextInput,
   LoadingOverlay,
+  Modal,
+  Notification,
 } from "@mantine/core";
 import Flag from "react-world-flags";
 import {
@@ -17,29 +19,39 @@ import {
   IconUser,
   IconSearch,
   IconMapPin,
+  IconStack2,
+  IconX,
 } from "@tabler/icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { useStyles } from "./Search.styles";
 import { useFetchDestination } from "../../hooks/useFechDestinations";
 import { DestinationInput } from "../DestinationInput";
+import { ProviderInput } from "../ProviderInput";
+import { Campus } from "../../services/destination";
 
 export interface Country {
   [key: string]: CountryType;
 }
 
 interface CountryType {
+  id: string;
   name: string;
   icon?: ReactElement<any, any> | null;
+  country: string;
 }
 
 export interface CountryLocation {
   [key: string]: Array<CountryLocationType>;
 }
+
 export interface CountryLocationType {
+  id: string;
   name: string;
   city?: string;
   state?: string;
   icon?: ReactElement<any, any> | null;
+  country: string;
+  locationId?: string;
 }
 
 /**
@@ -50,7 +62,12 @@ export const Search: FC = () => {
   const { classes } = useStyles();
   const matches = useMediaQuery("(min-width: 900px)");
   const [countries, setCountries] = useState<Country>({});
-  const [countryLocation, setCountryLocation] = useState<CountryLocation>({});
+  const [countryLocation, setCountryLocation] = useState<
+    Array<CountryLocationType>
+  >([]);
+  const [providers, setProviders] = useState<Array<CountryLocationType>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showError, setShowError] = useState(false);
 
   const {
     data: destinationsData,
@@ -60,44 +77,95 @@ export const Search: FC = () => {
 
   useEffect(() => {
     if (isErrorDestinations) {
+      setShowError(true);
     }
   }, [isErrorDestinations]);
 
   useEffect(() => {
+    setIsLoading(true);
     if (destinationsData?.data?.getAvailableFiltersForLanguageSearch) {
       const _locations =
         destinationsData.data.getAvailableFiltersForLanguageSearch?.locations;
 
       const _countries: Country = {};
-      const _countryLocation: CountryLocation = {};
+
+      const _countryLocationGroup: CountryLocation = {};
       _locations.forEach((element) => {
         if (element.name?.split(",")?.length === 1) {
+          _countryLocationGroup[element.country] = [];
           _countries[element.country] = {
+            id: element.id,
             name: element.name.trim(),
             icon: <Flag code={element.country} height={14} />,
+            country: element.country,
           };
-          _countryLocation[element.country] = [];
         }
       });
       _locations.forEach((element) => {
         const nameSplit = element.name?.split(",") || [];
         if (
           nameSplit?.length > 1 &&
-          _countryLocation[element.country]?.length >= 0
+          _countryLocationGroup[element.country]?.length >= 0
         ) {
-          _countryLocation[element.country].push({
+          _countryLocationGroup[element.country].push({
+            id: element.id,
             name: element?.name,
             state: element?.name
               ? element?.name.replace(`${nameSplit[0]}, `, "")
               : "",
             city: nameSplit[0],
             icon: <IconMapPin size={22} stroke={1.5} />,
+            country: element.country,
           });
         }
       });
+      const _countryLocation: Array<CountryLocationType> = [];
+
+      Object.keys(_countryLocationGroup).forEach((key) => {
+        _countryLocation.push(_countries[key]);
+        _countryLocationGroup[key].sort(
+          (a: CountryLocationType, b: CountryLocationType) =>
+            a.name.localeCompare(b.name)
+        );
+
+        _countryLocationGroup[key].forEach((element: CountryLocationType) => {
+          _countryLocation.push(element);
+        });
+      });
       setCountries(_countries);
       setCountryLocation(_countryLocation);
+
+      const _providers =
+        destinationsData.data.getAvailableFiltersForLanguageSearch?.campuses;
+
+      const _providerLocation: Array<CountryLocationType> = [];
+
+      _providers.forEach((element: Campus) => {
+        const locationFind = _locations.find(
+          (item) => item.id === element.location.id
+        );
+        let state = "";
+        if (locationFind) {
+          state = locationFind.name;
+        }
+        _providerLocation.push({
+          id: element.id,
+          name: element.name,
+          city: element.name,
+          state,
+          icon: <IconStack2 size={22} stroke={1.5} color="#1c7ed6" />,
+          country: element.location.country,
+          locationId: element.location.id,
+        });
+      });
+
+      _providerLocation.sort((a: CountryLocationType, b: CountryLocationType) =>
+        a.country.localeCompare(b.country)
+      );
+
+      setProviders(_providerLocation);
     }
+    setIsLoading(false);
   }, [destinationsData]);
 
   const UserCountry = () => {
@@ -111,7 +179,10 @@ export const Search: FC = () => {
   };
   return (
     <>
-      <LoadingOverlay visible={isLoadingDestinations} overlayBlur={2} />
+      <LoadingOverlay
+        visible={isLoadingDestinations || isLoading}
+        overlayBlur={2}
+      />
       <Container
         fluid
         style={{
@@ -166,15 +237,13 @@ export const Search: FC = () => {
                 <DestinationInput
                   countries={countries}
                   countryLocation={countryLocation}
+                  disabled={isLoadingDestinations}
+                />
+                <ProviderInput
+                  providers={providers}
+                  disabled={isLoadingDestinations}
                 />
 
-                <TextInput
-                  label="Provider"
-                  placeholder="Search"
-                  rightSection={<IconSearch size={20} stroke={1.5} />}
-                  classNames={classes}
-                  autoComplete="off"
-                />
                 <TextInput
                   label="Min. number of weeks"
                   defaultValue={4}
@@ -197,6 +266,23 @@ export const Search: FC = () => {
           </Tabs>
         </Paper>
       </Container>
+
+      <Modal
+        opened={showError}
+        centered
+        withCloseButton={false}
+        onClose={() => {}}
+        padding={0}
+      >
+        <Notification
+          icon={<IconX size={14} />}
+          color="red"
+          title="Course Search"
+          onClose={() => setShowError(false)}
+        >
+          An error occurred while obtaining the information of the destinations.
+        </Notification>
+      </Modal>
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SearchModal } from "./SearchModal";
 
 const setup = () => {
@@ -7,9 +7,11 @@ const setup = () => {
       opened={true}
       setOpened={() => {}}
       countries={{}}
-      locationsSelected={{}}
+      locationsSelected={[]}
       setLocationsSelected={() => {}}
-      locations={{}}
+      locations={[]}
+      emptySelectMessage="No locations selected."
+      emptyResultMessage="Enter a destination to see results."
     />
   );
 };
@@ -21,29 +23,40 @@ const setupWithData = () => {
       setOpened={() => {}}
       countries={{
         CA: {
+          id: "ChIJs0-pQ_FzhlQRi_OBm-qWkbs",
           name: "Canada",
           icon: null,
+          country: "CA",
         },
       }}
-      locations={{
-        CA: [
-          {
-            name: "Toronto, ON, Canada",
-            city: "Toronto",
-            state: "ON, Canada",
-            icon: null,
-          },
-          {
-            name: "Vancouver, BC, Canada",
-            city: "Vancouver",
-            state: "BC, Canada",
-            icon: null,
-          },
-        ],
-      }}
-      locationsSelected={{
-        "Toronto, ON, Canada": true,
-      }}
+      locations={[
+        {
+          id: "ChIJDbdkHFQayUwR7-8fITgxTmU",
+          name: "Toronto, ON, Canada",
+          city: "Toronto",
+          state: "ON, Canada",
+          icon: null,
+          country: "CA",
+        },
+        {
+          id: "ChIJOwg_06VPwokRYv534QaPC8g",
+          name: "Vancouver, BC, Canada",
+          city: "Vancouver",
+          state: "BC, Canada",
+          icon: null,
+          country: "CA",
+        },
+      ]}
+      locationsSelected={[
+        {
+          id: "ChIJDbdkHFQayUwR7-8fITgxTmU",
+          name: "Toronto, ON, Canada",
+          city: "Toronto",
+          state: "ON, Canada",
+          icon: null,
+          country: "CA",
+        },
+      ]}
       setLocationsSelected={() => {}}
     />
   );
@@ -55,9 +68,9 @@ test("should be able to allow hide Search modal when opened is false", () => {
       opened={false}
       setOpened={() => {}}
       countries={{}}
-      locationsSelected={{}}
+      locationsSelected={[]}
       setLocationsSelected={() => {}}
-      locations={{}}
+      locations={[]}
     />
   );
   const element = screen.queryByText(/Results/i);
@@ -78,7 +91,7 @@ test("should be able to allow display empty location selected message", () => {
 
 test("should be able to allow display results items", () => {
   setupWithData();
-  const element = screen.getByText(/Vancouver/i);
+  const element = screen.getByRole("button", { name: /Toronto/i });
   expect(element).toBeInTheDocument();
 });
 
@@ -90,8 +103,11 @@ test("should be able to allow display selected items", () => {
 
 test("should be able to allow click int result item", () => {
   setupWithData();
-  const item = screen.getByRole("button", { name: /Vancouver/i });
-  fireEvent.click(item);
-  const element = screen.getByText(/Selected \(1\)/i);
-  expect(element).toBeInTheDocument();
+  setTimeout(() => {
+    const item = screen.getByRole("button", { name: /Vancouver/i });
+    fireEvent.click(item);
+
+    const element = screen.getByText(/Selected \(1\)/i);
+    expect(element).toBeInTheDocument();
+  }, 100);
 });

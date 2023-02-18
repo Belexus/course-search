@@ -1,10 +1,11 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useContext } from "react";
 import { TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useStyles } from "./DestinationInput.styles";
 import { SearchModal } from "../SearchModal";
-import type { Country, CountryLocation } from "../Search";
+import type { Country, CountryLocationType } from "../Search";
+import { AppContext } from "../../context/AppContext";
 
 export interface LocationSelected {
   [key: string]: boolean;
@@ -12,7 +13,8 @@ export interface LocationSelected {
 
 interface DestinationInputProps {
   countries: Country;
-  countryLocation: CountryLocation;
+  countryLocation: Array<CountryLocationType>;
+  disabled?: boolean;
 }
 
 /**
@@ -20,59 +22,54 @@ interface DestinationInputProps {
  * @param {
  *   countries,
  *   countryLocation,
+ *   disabled
  * }
  * @returns JSX component
  */
 export const DestinationInput: FC<DestinationInputProps> = ({
   countries,
   countryLocation,
+  disabled = false,
 }) => {
   const { classes } = useStyles();
-  const [opened, setOpened] = useState(false);
+  const {
+    locationsSelected,
+    setLocationsSelected,
+    destinationModalOpened,
+    setDestinationModalOpened,
+    setProviderModalOpened,
+  } = useContext(AppContext);
 
   const [destination, setDestination] = useState("");
   const [prevDestination, setPrevDestination] = useState("");
   const [debounced] = useDebouncedValue(destination, 400);
-  const [locationsSelected, setLocationsSelected] = useState<LocationSelected>(
-    {}
-  );
-  const [locations, setLocations] = useState<CountryLocation>({});
+
+  const [locations, setLocations] = useState<Array<CountryLocationType>>([]);
 
   useEffect(() => {
     setLocations(countryLocation);
   }, [countryLocation]);
 
   useEffect(() => {
-    if (opened) {
-      populateResultList();
+    if (destinationModalOpened && debounced !== prevDestination) {
+      populateResultList(debounced);
     }
   }, [debounced]);
 
   useEffect(() => {
-    if (
-      !opened &&
-      locationsSelected &&
-      Object.keys(locationsSelected).length > 0
-    ) {
+    if (!destinationModalOpened && locationsSelected?.length > 0) {
       setPrevDestination(destination);
-      setDestination(`${Object.keys(locationsSelected).length} selected`);
+      setDestination(`${locationsSelected?.length} selected`);
     }
-  }, [locationsSelected, opened]);
+  }, [locationsSelected, destinationModalOpened]);
 
-  const populateResultList = () => {
-    const _countryLocation = { ...countryLocation };
-    const locationsFind: CountryLocation = {};
+  const populateResultList = (destination: string) => {
+    const _countryLocation = [...countryLocation];
 
-    Object.keys(_countryLocation).filter((key: string) => {
-      const locationList = _countryLocation[key].filter((item) => {
-        return item?.name.toLowerCase().includes(destination.toLowerCase());
-      });
-      if (locationList?.length > 0) {
-        locationsFind[key] = locationList;
-      }
-      return locationList?.length > 0;
+    const locationList = _countryLocation.filter((item) => {
+      return item?.name.toLowerCase().includes(destination.toLowerCase());
     });
-    setLocations(locationsFind);
+    setLocations(locationList);
   };
 
   const handleDestionationChange = (event: {
@@ -81,7 +78,8 @@ export const DestinationInput: FC<DestinationInputProps> = ({
     setDestination(event.currentTarget.value);
   };
   const handleDestionationBlur = () => {
-    setOpened(true);
+    setDestinationModalOpened(true);
+    setProviderModalOpened(false);
   };
   return (
     <div>
@@ -93,19 +91,23 @@ export const DestinationInput: FC<DestinationInputProps> = ({
         onChange={handleDestionationChange}
         onFocus={() => {
           setDestination(prevDestination);
-          setOpened(true);
+          setDestinationModalOpened(true);
+          setProviderModalOpened(false);
         }}
         onBlur={handleDestionationBlur}
         classNames={classes}
         autoComplete="off"
+        disabled={disabled}
       />
       <SearchModal
-        opened={opened}
-        setOpened={setOpened}
+        opened={destinationModalOpened}
+        setOpened={setDestinationModalOpened}
         countries={countries}
         locations={locations}
         locationsSelected={locationsSelected}
         setLocationsSelected={setLocationsSelected}
+        emptyResultMessage="Enter a destination to see results."
+        emptySelectMessage="No locations selected."
       />
     </div>
   );

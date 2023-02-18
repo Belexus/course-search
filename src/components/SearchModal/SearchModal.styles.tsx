@@ -8,6 +8,7 @@ export const useStyles = createStyles((theme) => ({
       backgroundColor: "#F0F6FF",
     },
     cursor: "pointer",
+    width: "100%",
   },
 
   itemActive: {
